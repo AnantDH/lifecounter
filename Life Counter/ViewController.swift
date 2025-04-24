@@ -9,98 +9,126 @@ import UIKit
 
 class ViewController: UIViewController {
     
-    var playerOneHealth = 20
-    var playerTwoHealth = 20
-
-    @IBOutlet weak var playerOneHealthLabel: UILabel!
-    @IBOutlet weak var playerTwoHealthLabel: UILabel!
-    @IBOutlet weak var loserLabel: UILabel!
+    var numPlayers = 0
+    
+    var xPos = 110
+    var yPos = 300
+    var customButtons: [UIButton] = []
+    var playersHealth: [Int] = []
+    var playersHealthLabels: [UILabel] = []
+    var customIncramenter = 5
+    @IBOutlet weak var addPlayerButton: UIButton!
+    @IBOutlet weak var customIncramenterVal: UITextField!
+    var gameHistory: [String] = []
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        loserLabel.isHidden = true
         // Do any additional setup after loading the view.
+        // create initial 4 players
+        for _ in 0..<4 {
+            createPlayer()
+        }
     }
     
-    @IBAction func playerOnePlus1(_ sender: Any) {
-        playerOneHealth += 1
-        playerOneHealthLabel.text = "\(playerOneHealth)"
-        if playerOneHealth > 0 {
-            if playerTwoHealth <= 0 {
-                loserLabel.text = "Player 2 LOSES!"
-            } else {
-                loserLabel.isHidden = true
+    func createPlayer() {
+        numPlayers += 1
+        if xPos == 860 {
+            yPos += 175
+            xPos = 110
+        }
+        createLabel(xPos: xPos, yPos: yPos)
+        let index = createPlayerHealthLabel(xPos: xPos + 30, yPos: yPos)
+        customButtons.append(createButton(xPos: xPos + 70, yPos: yPos + 100, isPositive: true, index: index))
+        customButtons.append(createButton(xPos: xPos - 10, yPos: yPos + 100, isPositive: false, index: index))
+        xPos += 250
+    }
+    
+    func createLabel(xPos: Int, yPos: Int) {
+        let newLabel = UILabel(frame: CGRect(x: xPos, y: yPos, width: 150, height: 150))
+        newLabel.text = "Player \(numPlayers)"
+        newLabel.textColor = .white
+        newLabel.font = UIFont.systemFont(ofSize: 30, weight: .bold)
+        self.view.addSubview(newLabel)
+    }
+    
+    func createPlayerHealthLabel(xPos: Int, yPos: Int) -> Int {
+        let newLabel = UILabel(frame: CGRect(x: xPos, y: yPos, width: 60, height: 50))
+        newLabel.text = "20"
+        newLabel.textColor = .white
+        newLabel.font = UIFont.systemFont(ofSize: 30, weight: .bold)
+        self.view.addSubview(newLabel)
+        playersHealth.append(20)
+        let index = playersHealthLabels.count
+        playersHealthLabels.append(newLabel)
+        return index
+    }
+    
+    func createButton(xPos: Int, yPos: Int, isPositive: Bool, index: Int) -> UIButton {
+        let newButton = UIButton(type: .roundedRect)
+        newButton.frame = CGRect(x: xPos, y: yPos, width: 50, height: 50)
+        newButton.backgroundColor = .darkGray
+        if isPositive {
+            newButton.setTitle("+\(customIncramenter)", for: .normal)
+        } else {
+            newButton.setTitle("-\(customIncramenter)", for: .normal)
+        }
+        
+        newButton.addTarget(self, action: #selector(handleHealthButton(_:)), for: .touchUpInside)
+        newButton.tag = index
+        self.view.addSubview(newButton)
+        return newButton
+    }
+    
+    @IBAction func handleNewIncramenter(_ sender: Any) {
+        if let text = customIncramenterVal.text {
+            if let newNum = Int(text) {
+                customIncramenter = newNum
+                for button in customButtons {
+                    if let buttonTitle = button.title(for: .normal) {
+                        if buttonTitle.contains("+") {
+                            button.setTitle("+\(newNum)", for: .normal)
+                        } else {
+                            button.setTitle("-\(newNum)", for: .normal)
+                        }
+                    }
+                }
             }
         }
     }
     
-    @IBAction func playerOneMinus1(_ sender: Any) {
-        playerOneHealth -= 1
-        playerOneHealthLabel.text = "\(playerOneHealth)"
-        if playerOneHealth <= 0 {
-            loserLabel.text = "Player 1 LOSES!"
-            loserLabel.isHidden = false
+    @IBAction func handleAddPlayer(_ sender: Any) {
+        if numPlayers < 8 {
+            createPlayer()
         }
     }
     
-    @IBAction func playerOnePlus5(_ sender: Any) {
-        playerOneHealth += 5
-        playerOneHealthLabel.text = "\(playerOneHealth)"
-        if playerOneHealth > 0 {
-            if playerTwoHealth <= 0 {
-                loserLabel.text = "Player 2 LOSES!"
+    @objc func handleHealthButton(_ sender: UIButton) {
+        addPlayerButton.isHidden = true
+        if let buttonTitle = sender.title(for: .normal) {
+            var currHealth = playersHealth[sender.tag]
+            if buttonTitle.contains("+") {
+                currHealth += customIncramenter
+                playersHealth[sender.tag] = currHealth
+                gameHistory.append("Player \(sender.tag + 1) gained \(customIncramenter) life")
             } else {
-                loserLabel.isHidden = true
+                currHealth -= customIncramenter
+                playersHealth[sender.tag] = currHealth
+                gameHistory.append("Player \(sender.tag + 1) lost \(customIncramenter) life")
+            }
+            playersHealthLabels[sender.tag].text = "\(currHealth)"
+            
+            if currHealth <= 0 {
+                playersHealthLabels[sender.tag].textColor = .red
+            } else {
+                playersHealthLabels[sender.tag].textColor = .white
             }
         }
     }
     
-    @IBAction func playerOneMinus5(_ sender: Any) {
-        playerOneHealth -= 5
-        playerOneHealthLabel.text = "\(playerOneHealth)"
-        if playerOneHealth <= 0 {
-            loserLabel.text = "Player 1 LOSES!"
-            loserLabel.isHidden = false
-        }
-    }
-    
-    @IBAction func playerTwoPlus1(_ sender: Any) {
-        playerTwoHealth += 1
-        playerTwoHealthLabel.text = "\(playerTwoHealth)"
-        if playerTwoHealth > 0 {
-            if playerOneHealth <= 0 {
-                loserLabel.text = "Player 1 LOSES!"
-            } else {
-                loserLabel.isHidden = true
-            }
-        }
-    }
-    @IBAction func playerTwoMinus1(_ sender: Any) {
-        playerTwoHealth -= 1
-        playerTwoHealthLabel.text = "\(playerTwoHealth)"
-        if playerTwoHealth <= 0 {
-            loserLabel.text = "Player 2 LOSES!"
-            loserLabel.isHidden = false
-        }
-    }
-    @IBAction func playerTwoPlus5(_ sender: Any) {
-        playerTwoHealth += 5
-        playerTwoHealthLabel.text = "\(playerTwoHealth)"
-        if playerTwoHealth > 0 {
-            if playerOneHealth <= 0 {
-                loserLabel.text = "Player 1 LOSES!"
-            } else {
-                loserLabel.isHidden = true
-            }
-        }
-    }
-    @IBAction func playerTwoMinus5(_ sender: Any) {
-        playerTwoHealth -= 5
-        playerTwoHealthLabel.text = "\(playerTwoHealth)"
-        if playerTwoHealth <= 0 {
-            loserLabel.text = "Player 2 LOSES!"
-            loserLabel.isHidden = false
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        if segue.identifier == "showHistory",
+           let destination = segue.destination as? HistoryViewController {
+            destination.history = gameHistory
         }
     }
 }
-
